@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Mermaid Diagram Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            height: 100vh;
+        }
+        #chat-section, #preview-section {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #chat-section {
+            border-right: 1px solid #ccc;
+        }
+        #chat-box {
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-y: auto;
+        }
+        #user-input {
+            width: calc(100% - 70px);
+            padding: 5px;
+        }
+        #send {
+            width: 60px;
+            padding: 5px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .user {
+            background-color: #e6f3ff;
+            text-align: right;
+        }
+        .assistant {
+            background-color: #f0f0f0;
+        }
+        #mermaid-diagram {
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 200px;
+        }
+        #status {
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-section">
+        <h2>Mermaid Diagram Generator</h2>
+        <div id="chat-box"></div>
+        <div>
+            <input type="text" id="user-input" placeholder="Describe the diagram you want...">
+            <button id="send">Send</button>
+        </div>
+        <div id="status"></div>
+    </div>
+    <div id="preview-section">
+        <h2>Diagram Preview</h2>
+        <div id="mermaid-diagram"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.0.2/dist/mermaid.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Mermaid
+        let mermaidInitialized = mermaid.initialize({ 
+            startOnLoad: false,
+            securityLevel: 'loose'
+        });
+    
+        // DOM elements
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send');
+        const statusDiv = document.getElementById('status');
+        const mermaidDiagram = document.getElementById('mermaid-diagram');
+    
+        // Mock AI response function
+        function generateMermaidCode(userPrompt) {
+            console.log("Generating Mermaid code for prompt:", userPrompt);
+            
+            if (userPrompt.toLowerCase().includes("flowchart") || userPrompt.toLowerCase().includes("flow chart")) {
+                return `graph TD
+        A[Start] --> B{Is it raining?}
+        B -->|Yes| C[Take an umbrella]
+        B -->|No| D[Enjoy the weather]
+        C --> E[Go outside]
+        D --> E`;
+            } else if (userPrompt.toLowerCase().includes("sequence")) {
+                return `sequenceDiagram
+        participant Alice
+        participant Bob
+        Alice->>John: Hello John, how are you?
+        loop Healthcheck
+            John->>John: Fight against hypochondria
+        end
+        Note right of John: Rational thoughts <br/>prevail...
+        John-->>Alice: Great!
+        John->>Bob: How about you?
+        Bob-->>John: Jolly good!`;
+            } else {
+                return `graph LR
+        A[Square Rect] -- Link text --> B((Circle))
+        A --> C(Round Rect)
+        B --> D{Rhombus}
+        C --> D`;
+            }
+        }
+    
+        // Function to add a message to the chat box
+        function addMessage(content, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user' : 'assistant');
+            messageDiv.textContent = content;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    
+        // Function to render Mermaid diagram
+        async function renderMermaidDiagram(code) {
+            console.log("Rendering Mermaid diagram with code:", code);
+            try {
+                await mermaidInitialized;
+                const { svg } = await mermaid.render('mermaid-diagram', code);
+                mermaidDiagram.innerHTML = svg;
+            } catch (error) {
+                console.error("Error rendering Mermaid diagram:", error);
+                mermaidDiagram.textContent = "Error rendering diagram. Please try again.";
+            }
+        }
+    
+        // Function to handle user input
+        async function handleUserInput() {
+            const userPrompt = userInput.value.trim();
+            if (userPrompt === '') return;
+    
+            console.log("User input received:", userPrompt);
+    
+            // Add user message to chat
+            addMessage(userPrompt, true);
+            userInput.value = '';
+    
+            // Update status
+            statusDiv.textContent = "Generating diagram...";
+    
+            // Simulate AI processing time
+            setTimeout(async () => {
+                // Generate and add AI response
+                const mermaidCode = generateMermaidCode(userPrompt);
+                addMessage("Here's the Mermaid code for your diagram:\n\n" + mermaidCode, false);
+    
+                // Render the diagram
+                await renderMermaidDiagram(mermaidCode);
+    
+                // Update status
+                statusDiv.textContent = "Diagram generated successfully!";
+            }, 1000);
+        }
+    
+        // Event listeners
+        sendButton.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserInput();
+        });
+    
+        console.log("Application initialized and ready for input.");
+    });
+    </script>
+</body>
+</html>
